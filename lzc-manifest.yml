@@ -1,0 +1,155 @@
+# Basic Information
+package: cloud.lazycat.app.liu.woodpecker
+version: 3.11.0
+name: woodpecker
+keyword: woodpecker
+description: Woodpecker is a simple yet powerful CI/CD engine with great extensibility. Perfect for teams seeking a self-hosted continuous integration and deployment solution.
+
+license: https://github.com/woodpecker-ci/woodpecker?tab=Apache-2.0-1-ov-file#readme
+homepage: https://github.com/woodpecker-ci/woodpecker
+author: liu
+
+# Localization
+locales:
+  zh:
+    name: Woodpecker CI/CD
+    description: |
+      Woodpecker 是一个简单但功能强大的 CI/CD 引擎，具有出色的可扩展性。
+
+      **官方网站：** https://woodpecker-ci.org/
+      **仓库地址：** https://github.com/lazycatapps/woodpecker.git
+
+      **主要特性：**
+      - 轻量级：服务器仅需 100 MB 内存，代理仅需 30 MB
+      - 默认使用 SQLite 数据库，无需额外配置
+      - 支持 GitHub、GitLab、Gitea 等多种代码仓库
+      - 基于容器的流水线执行
+      - 强大的插件系统
+
+      **部署前提：**
+      1. 该应用依赖 dockge，请先部署 dockge 应用，才能使用 pg-docker
+      2. 由于在执行流水线的过程中会拉取 docker.io 上的镜像，请提前确保 pg-docker 具备拉取公网镜像的能力
+      3. 该应用会在 pg-docker 中执行 CI/CD 流水线，不会影响到 lzc-docker 的稳定性，请放心使用
+
+      **使用说明：**
+      1. 首次访问时，需要配置 GitHub OAuth 应用（或其他 Git 仓库提供商）
+      2. 前往 GitHub Settings > Developer settings > OAuth Apps 创建新应用
+      3. 将 WOODPECKER_GITHUB_CLIENT 和 WOODPECKER_GITHUB_SECRET 替换为你的 GitHub OAuth 应用凭据
+      4. 修改 WOODPECKER_AGENT_SECRET 为一个随机生成的密钥（建议使用 openssl rand -hex 32 生成）
+      5. 访问应用 Web 界面，使用 GitHub 账号登录并授权
+      6. 连接你的代码仓库
+      7. 在仓库根目录添加 .woodpecker.yml 配置文件定义 CI/CD 流程
+      8. 推送代码触发自动构建和部署
+
+      **详细配置指南：** https://github.com/lazycatapps/woodpecker/blob/main/QUICKSTART.md
+
+      **注意事项：**
+      - 首次使用需要配置 OAuth 应用才能正常使用
+      - Agent 需要访问 Docker socket 来执行容器化任务
+      - 建议定期备份 /lzcapp/var/woodpecker 目录
+
+      更多配置选项和使用方法请参考官方文档：https://woodpecker-ci.org/docs/
+
+  en:
+    name: Woodpecker CI/CD
+    description: |
+      Woodpecker is a simple yet powerful CI/CD engine with great extensibility.
+
+      **Official Website:** https://woodpecker-ci.org/
+      **Repository:** https://github.com/lazycatapps/woodpecker.git
+
+      **Key Features:**
+      - Lightweight: Only 100 MB RAM for server and 30 MB for agents
+      - Uses SQLite as default database, no extra configuration needed
+      - Supports GitHub, GitLab, Gitea and more
+      - Container-based pipeline execution
+      - Powerful plugin ecosystem
+
+      **Prerequisites:**
+      1. This application depends on dockge. Please deploy dockge first before using pg-docker
+      2. Since pipeline execution pulls images from docker.io, ensure pg-docker has access to pull public registry images
+      3. This application runs CI/CD pipelines in pg-docker and will not affect lzc-docker stability, so you can use it with confidence
+
+      **Setup Instructions:**
+      1. First access requires GitHub OAuth app configuration (or other Git providers)
+      2. Go to GitHub Settings > Developer settings > OAuth Apps to create new app
+      3. Replace WOODPECKER_GITHUB_CLIENT and WOODPECKER_GITHUB_SECRET with your OAuth credentials
+      4. Change WOODPECKER_AGENT_SECRET to a randomly generated secret (use openssl rand -hex 32)
+      5. Access the web interface and login with GitHub account
+      6. Connect your code repositories
+      7. Add .woodpecker.yml configuration file in repository root to define CI/CD pipeline
+      8. Push code to trigger automatic build and deployment
+
+      **Detailed Configuration Guide:** https://github.com/lazycatapps/woodpecker/blob/main/QUICKSTART.md
+
+      **Notes:**
+      - OAuth app configuration required for first use
+      - Agent needs Docker socket access for containerized tasks
+      - Regular backup of /lzcapp/var/woodpecker directory recommended
+
+      For more configuration options and usage, refer to official docs: https://woodpecker-ci.org/docs/
+
+# Application Configuration
+application:
+  subdomain: woodpecker
+  background_task: true
+  multi_instance: false
+  routes:
+    - /=http://woodpecker-server:8000
+  public_path:
+    - /                         # 无需登录即可访问
+
+# Services Configuration
+services:
+  woodpecker-server:
+    # lzc-cli appstore copy-image woodpeckerci/woodpecker-server:latest
+    image: registry.lazycat.cloud/liu/woodpeckerci/woodpecker-server:0502c9df1d85c07c
+    user: root
+    environment:
+      - WOODPECKER_OPEN=true
+      - WOODPECKER_HOST=https://${LAZYCAT_APP_DOMAIN}
+      # Git Platform Configuration - IMPORTANT: Only set ONE platform to true
+      # GitHub OAuth Configuration (set WOODPECKER_GITHUB=true to use GitHub)
+      - WOODPECKER_GITHUB=false
+      - WOODPECKER_GITHUB_URL=https://github.com
+      - WOODPECKER_GITHUB_CLIENT=
+      - WOODPECKER_GITHUB_SECRET=
+      # GitLab OAuth Configuration (set WOODPECKER_GITLAB=true to use GitLab)
+      - WOODPECKER_GITLAB=false
+      - WOODPECKER_GITLAB_URL=https://gitlab.com
+      - WOODPECKER_GITLAB_CLIENT=
+      - WOODPECKER_GITLAB_SECRET=
+      # Gitea OAuth Configuration (set WOODPECKER_GITEA=true to use Gitea)
+      - WOODPECKER_GITEA=false
+      - WOODPECKER_GITEA_URL=
+      - WOODPECKER_GITEA_CLIENT=
+      - WOODPECKER_GITEA_SECRET=
+      # Agent Secret (generate with: openssl rand -hex 32)
+      - WOODPECKER_AGENT_SECRET=replace-with-generated-agent-secret
+    binds:
+      - /lzcapp/var/woodpecker:/var/lib/woodpecker
+    health_check:
+      test_url: http://127.0.0.1:8000
+      start_period: 60s
+
+  woodpecker-agent:
+    # lzc-cli appstore copy-image woodpeckerci/woodpecker-agent:latest
+    image: registry.lazycat.cloud/liu/woodpeckerci/woodpecker-agent:c287ac10507b34aa
+    user: root
+    environment:
+      - WOODPECKER_SERVER=woodpecker-server:9000
+      - WOODPECKER_AGENT_SECRET=replace-with-generated-agent-secret
+    command: agent
+    depends_on:
+      - woodpecker-server
+    binds:
+      - /lzcapp/var/woodpecker:/etc/woodpecker
+    health_check:
+      test_url: http://127.0.0.1:3000
+      start_period: 60s
+
+# Platform Support
+unsupported_platforms:
+  - ios
+  - android
+  - tvos
