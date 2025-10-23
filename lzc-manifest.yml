@@ -1,6 +1,6 @@
 # Basic Information
 package: cloud.lazycat.app.liu.woodpecker
-version: 3.11.0
+version: 3.11.0-1
 name: woodpecker
 keyword: woodpecker
 description: Woodpecker is a simple yet powerful CI/CD engine with great extensibility. Perfect for teams seeking a self-hosted continuous integration and deployment solution.
@@ -110,7 +110,7 @@ services:
       - WOODPECKER_HOST=https://${LAZYCAT_APP_DOMAIN}
       # Git Platform Configuration - IMPORTANT: Only set ONE platform to true
       # GitHub OAuth Configuration (set WOODPECKER_GITHUB=true to use GitHub)
-      - WOODPECKER_GITHUB=false
+      - WOODPECKER_GITHUB=true
       - WOODPECKER_GITHUB_URL=https://github.com
       - WOODPECKER_GITHUB_CLIENT=
       - WOODPECKER_GITHUB_SECRET=
@@ -127,7 +127,11 @@ services:
       # Agent Secret (generate with: openssl rand -hex 32)
       - WOODPECKER_AGENT_SECRET=replace-with-generated-agent-secret
     binds:
-      - /lzcapp/var/woodpecker:/var/lib/woodpecker
+      - /lzcapp/var/woodpecker-server-data:/var/lib/woodpecker
+    # 不支持 test_url 的写法，且该容器中没有 curl 等工具，故注释掉
+    # health_check:
+    #   test_url: http://127.0.0.1:9000
+    #   start_period: 60s
     health_check:
       test_url: http://127.0.0.1:8000
       start_period: 60s
@@ -140,13 +144,15 @@ services:
       - WOODPECKER_SERVER=woodpecker-server:9000
       - WOODPECKER_AGENT_SECRET=replace-with-generated-agent-secret
     command: agent
+    restart: unless-stopped
     depends_on:
       - woodpecker-server
     binds:
-      - /lzcapp/var/woodpecker:/etc/woodpecker
-    health_check:
-      test_url: http://127.0.0.1:3000
-      start_period: 60s
+      - /lzcapp/var/woodpecker-agent-config:/etc/woodpecker
+    # 不支持 test_url 的写法，且该容器中没有 curl 等工具，故注释掉
+    # health_check:
+    #   test_url: http://127.0.0.1:3000
+    #   start_period: 60s
 
 # Platform Support
 unsupported_platforms:

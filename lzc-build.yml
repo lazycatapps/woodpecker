@@ -38,6 +38,7 @@ icon: ./icon.png
 compose_override:
   services:
     woodpecker-agent:
+      restart: unless-stopped
       volumes:
         # 绑定 lzc-docker 的 socket 文件到容器中
         # - /lzcsys/run/lzc-docker/docker.sock:/var/run/docker.sock:ro
